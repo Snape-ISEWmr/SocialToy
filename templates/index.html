@@ -1,0 +1,829 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>当代人类身份鉴定中心</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: "PingFang SC", "Microsoft YaHei", "Helvetica Neue", Arial, sans-serif; background: #fff; color: #000; -webkit-font-smoothing: antialiased; }
+    .page { display: none; }
+    .page.active { display: flex; }
+    .btn-black { width: 100%; background: #000; color: #fff; border: none; padding: 16px 32px; font-size: 18px; font-weight: 500; cursor: pointer; text-align: center; }
+    .btn-black:active { background: #333; }
+    .btn-outline { width: 100%; background: #fff; color: #000; border: 2px solid #000; padding: 14px 32px; font-size: 16px; font-weight: 500; cursor: pointer; text-align: center; }
+    .btn-outline:active { background: #f5f5f5; }
+    .toast { position: fixed; top: 20px; left: 50%; transform: translateX(-50%); background: #000; color: #fff; padding: 12px 24px; font-size: 14px; z-index: 999; }
+  </style>
+</head>
+<body>
+
+<!-- ========== 首页 ========== -->
+<div id="home-page" class="page active flex-col items-center justify-center min-h-screen px-6">
+  <div class="flex-1 flex flex-col items-center justify-center w-full max-w-md">
+    <h1 class="text-3xl md:text-4xl font-bold text-center mb-16 leading-tight">当代人类身份鉴定中心</h1>
+    <div class="flex flex-col gap-5 w-full">
+      <button class="btn-black" onclick="startTest('worker')">打工人摸鱼人格测试</button>
+      <button class="btn-black" onclick="startTest('love')">恋爱脑等级测试</button>
+      <button class="btn-black" onclick="startTest('holiday')">五一假期人格测试</button>
+    </div>
+  </div>
+  <p class="text-gray-400 text-xs text-center pb-8">关注公众号【你的公众号】获取更多测试</p>
+</div>
+
+<!-- ========== 测试页面 ========== -->
+<div id="test-page" class="page flex-col items-center min-h-screen px-6 pt-8 pb-8">
+  <div class="w-full max-w-md flex-1 flex flex-col">
+    <!-- 进度条 -->
+    <div class="mb-8">
+      <div class="flex justify-between text-sm text-gray-500 mb-2">
+        <span>答题进度</span>
+        <span id="progress-text">1/10</span>
+      </div>
+      <div class="w-full bg-gray-200 h-2">
+        <div id="progress-bar" class="bg-black h-2" style="width:10%"></div>
+      </div>
+    </div>
+    <!-- 题目 -->
+    <h2 id="question-text" class="text-xl md:text-2xl font-medium text-center mb-10 leading-relaxed"></h2>
+    <!-- 选项 -->
+    <div id="options-container" class="flex flex-col gap-4"></div>
+  </div>
+</div>
+
+<!-- ========== 结果页面 ========== -->
+<div id="result-page" class="page flex-col items-center min-h-screen px-6 pt-10 pb-10">
+  <div class="w-full max-w-md flex-1 flex flex-col items-center">
+    <!-- 核心标签 -->
+    <h1 id="result-label" class="text-4xl md:text-5xl font-bold text-center mb-8"></h1>
+    <!-- 标签图片（Canvas生成） -->
+    <div id="result-image-wrap" class="mb-6 flex justify-center">
+      <canvas id="result-canvas" width="200" height="200"></canvas>
+    </div>
+    <!-- 全国占比 -->
+    <p id="result-percentage" class="text-gray-500 text-center text-sm mb-8"></p>
+    <!-- 评价内容 -->
+    <div id="evaluations-container" class="flex flex-col gap-4 mb-12 w-full"></div>
+    <!-- 操作按钮 -->
+    <div class="flex flex-col gap-4 w-full">
+      <button class="btn-black" onclick="copyResult()">复制结果</button>
+      <button class="btn-black" onclick="generateShareImage()">生成分享图</button>
+      <button class="btn-outline" onclick="restartTest()">再测一次</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ==================== 测试数据 ====================
+const TEST_DATA = {
+  worker: {
+    title: "打工人摸鱼人格测试",
+    questions: [
+      {
+        text: "周一早上9点，你刚到公司，第一件事做什么？",
+        options: [
+          { text: "立刻打开电脑，列出今天的待办事项", type: "A" },
+          { text: "先去茶水间泡杯咖啡，顺便和同事寒暄", type: "B" },
+          { text: "打开手机刷10分钟朋友圈再开工", type: "C" },
+          { text: "发个朋友圈：新的一周，加油打工人", type: "D" }
+        ]
+      },
+      {
+        text: "开会时领导在讲PPT，你通常在做什么？",
+        options: [
+          { text: "认真做笔记，生怕漏掉任何细节", type: "A" },
+          { text: "假装在记笔记，实际在偷偷回微信", type: "D" },
+          { text: "神游太虚，思考中午吃什么", type: "C" },
+          { text: "适时点头附和，演技堪比影帝", type: "B" }
+        ]
+      },
+      {
+        text: "下午3点，同事约你去茶水间摸鱼，你会？",
+        options: [
+          { text: "拒绝，手头还有工作没做完", type: "A" },
+          { text: "欣然前往，摸鱼是打工人的基本权利", type: "C" },
+          { text: "去是可以去，但5分钟就回来", type: "B" },
+          { text: "不仅去，还顺便带上了零食和八卦", type: "D" }
+        ]
+      },
+      {
+        text: "快到下班时间，老板突然布置新任务，你的反应是？",
+        options: [
+          { text: "二话不说，加班搞定", type: "A" },
+          { text: "嘴上答应，明天再做", type: "B" },
+          { text: "假装没看到消息，准时溜走", type: "C" },
+          { text: "先发个朋友圈控诉，然后默默加班", type: "D" }
+        ]
+      },
+      {
+        text: "午休时间到了，你通常怎么度过？",
+        options: [
+          { text: "边吃饭边看工作文档，争分夺秒", type: "A" },
+          { text: "准时吃饭，准时午睡，雷打不动", type: "B" },
+          { text: "刷短视频刷到忘记时间", type: "C" },
+          { text: "和同事组队开黑，午休就是我的战场", type: "D" }
+        ]
+      },
+      {
+        text: "看到同事在朋友圈晒加班，你的想法是？",
+        options: [
+          { text: "向优秀的人学习，今晚我也加班", type: "A" },
+          { text: "内心毫无波澜，甚至想点个赞", type: "B" },
+          { text: "呵呵，表演型加班，谁不会啊", type: "D" },
+          { text: "关掉朋友圈，继续摸我的鱼", type: "C" }
+        ]
+      },
+      {
+        text: "周末收到工作群消息，你会怎么处理？",
+        options: [
+          { text: "秒回，工作消息不能等", type: "A" },
+          { text: "已读不回，周一再说", type: "C" },
+          { text: "隔两小时再回，显得我很忙", type: "D" },
+          { text: "看情况，真急就回，不急就装死", type: "B" }
+        ]
+      },
+      {
+        text: "公司团建活动，你的参与度如何？",
+        options: [
+          { text: "积极组织，团建是增进团队感情的好机会", type: "A" },
+          { text: "佛系参与，去不去都行", type: "B" },
+          { text: "能不去就不去，社恐发作", type: "C" },
+          { text: "必须去！免费吃喝谁不去谁傻", type: "D" }
+        ]
+      },
+      {
+        text: "遇到不懂的工作问题，你通常怎么做？",
+        options: [
+          { text: "自己查资料研究，绝不麻烦别人", type: "A" },
+          { text: "直接问同事，效率第一", type: "B" },
+          { text: "先放一放，说不定明天就懂了", type: "C" },
+          { text: "问是会问的，但先夸对方一波", type: "D" }
+        ]
+      },
+      {
+        text: "如果给你一个月带薪假期，你最想做什么？",
+        options: [
+          { text: "报个培训班提升自己，假期不能浪费", type: "A" },
+          { text: "在家躺平，能不动就不动", type: "C" },
+          { text: "出去旅游，朋友圈素材不能断", type: "D" },
+          { text: "先睡三天三夜，然后再做打算", type: "B" }
+        ]
+      }
+    ],
+    results: {
+      A: {
+        label: "卷王之王",
+        percentage: "5%",
+        evaluations: [
+          "你是天选的卷王，工作就是你的信仰，加班就是你的朝圣。",
+          "别人摸鱼你加班，别人睡觉你复盘，你的KPI永远比体重涨得快。",
+          "建议去医院挂个号——不是身体有病，是脑子有病。"
+        ]
+      },
+      B: {
+        label: "摸鱼达人",
+        percentage: "18%",
+        evaluations: [
+          "你是摸鱼界的教科书，工作摸鱼两不误，效率与快乐并存。",
+          "你的摸鱼不是偷懒，是艺术——精准卡点，从不翻车。",
+          "同事以为你在努力，老板以为你在加班，只有你知道真相。"
+        ]
+      },
+      C: {
+        label: "躺平大师",
+        percentage: "25%",
+        evaluations: [
+          "你已经参透了打工的本质——给多少钱干多少活，多一分都是亏。",
+          "你的工位就是你的禅修场，手机就是你的木鱼，刷屏就是你的念经。",
+          "佛系不是你的态度，是你的战略——躺得越平，子弹越打不着。"
+        ]
+      },
+      D: {
+        label: "表演型选手",
+        percentage: "15%",
+        evaluations: [
+          "你是职场奥斯卡影帝，表演努力比真正努力还累。",
+          "朋友圈加班照、深夜打卡、工位绿植——你的努力，必须被看见。",
+          "其实你摸鱼比谁都狠，只是演技太好，连自己都信了。"
+        ]
+      },
+      AB: {
+        label: "职场老油条",
+        percentage: "12%",
+        evaluations: [
+          "你深谙职场潜规则，该卷的时候卷，该摸的时候摸，进退自如。",
+          "领导面前你是劳模，同事面前你是兄弟，谁都不得罪。",
+          "你的生存技能点满了，但你的良心——好像也磨没了。"
+        ]
+      },
+      AC: {
+        label: "打工皇帝",
+        percentage: "8%",
+        evaluations: [
+          "你混日子的功力登峰造极，但活干得比谁都漂亮——这就是天赋。",
+          "你从不加班，但绩效永远中等偏上，领导也挑不出毛病。",
+          "你不是在打工，你是在演一出「看似摸鱼实则靠谱」的戏。"
+        ]
+      },
+      BD: {
+        label: "隐形人",
+        percentage: "10%",
+        evaluations: [
+          "你的存在感低到令人发指，开会没人点你名，团建没人叫你。",
+          "但这也意味着——没人找你麻烦，没人给你加活，完美隐身。",
+          "你不是不合群，你只是把社交电量省下来用来摸鱼了。"
+        ]
+      },
+      CD: {
+        label: "佛系打工人",
+        percentage: "7%",
+        evaluations: [
+          "你对一切佛系对待——升职加薪随缘，加班摸鱼随缘，连生气都随缘。",
+          "你的座右铭是「都行、可以、没关系」，三个词走天下。",
+          "别人在卷，你在看；别人在争，你在笑——笑他们太年轻。"
+        ]
+      }
+    }
+  },
+  love: {
+    title: "恋爱脑等级测试",
+    questions: [
+      { text: "喜欢的人已读不回，你会？", options: [
+        { text: "继续发消息，万一对方只是忙", type: "A" },
+        { text: "等半小时再发一条，保持矜持", type: "B" },
+        { text: "放下手机，该干嘛干嘛", type: "C" },
+        { text: "开始分析对方每条消息的潜台词", type: "D" }
+      ]},
+      { text: "约会时对方迟到了30分钟，你？", options: [
+        { text: "没关系，等再久也值得", type: "A" },
+        { text: "有点不爽但不会说出来", type: "B" },
+        { text: "直接走人，不尊重我时间的人不值得", type: "C" },
+        { text: "发朋友圈暗示，让对方看到", type: "D" }
+      ]},
+      { text: "恋爱后你的社交圈？", options: [
+        { text: "基本只剩对象了，其他人都无所谓", type: "A" },
+        { text: "减少了但还维持着几个好友", type: "B" },
+        { text: "该聚聚该玩玩，恋爱不能影响社交", type: "C" },
+        { text: "表面维持社交，心里只想和对象待着", type: "D" }
+      ]},
+      { text: "对象说「我没事」，你信吗？", options: [
+        { text: "不信！一定有事！追问到底！", type: "A" },
+        { text: "半信半疑，但不敢多问", type: "B" },
+        { text: "信，说没事就是没事", type: "C" },
+        { text: "不信，但假装信，暗中观察", type: "D" }
+      ]},
+      { text: "分手后你的状态？", options: [
+        { text: "天塌了，世界末日，活不下去了", type: "A" },
+        { text: "哭三天三夜，然后慢慢走出来", type: "B" },
+        { text: "难过归难过，日子还得过", type: "C" },
+        { text: "表面云淡风轻，深夜疯狂emo", type: "D" }
+      ]},
+      { text: "你会为对象改变自己吗？", options: [
+        { text: "会！爱一个人就要变成对方喜欢的样子", type: "A" },
+        { text: "小习惯可以改，底线不能动", type: "B" },
+        { text: "不会，爱我就要爱真实的我", type: "C" },
+        { text: "嘴上说不会，实际已经在改了", type: "D" }
+      ]},
+      { text: "对象和异性同事走得近，你？", options: [
+        { text: "醋坛子打翻，必须问清楚", type: "A" },
+        { text: "心里不舒服，但装作不在意", type: "B" },
+        { text: "正常社交而已，不用大惊小怪", type: "C" },
+        { text: "表面淡定，背地里翻对方朋友圈", type: "D" }
+      ]},
+      { text: "纪念日忘了准备礼物，你？", options: [
+        { text: "自责到不行，立刻补上双倍", type: "A" },
+        { text: "赶紧补救，能补多少补多少", type: "B" },
+        { text: "道个歉就好，不是什么大事", type: "C" },
+        { text: "先发个红包，再想怎么圆场", type: "D" }
+      ]},
+      { text: "你手机里有对象多少照片？", options: [
+        { text: "几百张，相册全是对方", type: "A" },
+        { text: "几十张，精选了一些", type: "B" },
+        { text: "几张合照而已", type: "C" },
+        { text: "不多，但截图保存了很多聊天记录", type: "D" }
+      ]},
+      { text: "你觉得恋爱中最重要的是？", options: [
+        { text: "全心全意付出，爱就要轰轰烈烈", type: "A" },
+        { text: "互相理解和包容", type: "B" },
+        { text: "保持独立，互相尊重", type: "C" },
+        { text: "感觉对了，其他都不重要", type: "D" }
+      ]}
+    ],
+    results: {
+      A: { label: "重度恋爱脑", percentage: "12%", evaluations: [
+        "你的恋爱脑已经晚期了，恋爱就是你的氧气，没对象就窒息。",
+        "你的世界围着对方转，连吃饭都要先问对方吃了没。",
+        "建议把手机放下，出门走走——世界很大，不只有一个人。"
+      ]},
+      B: { label: "轻度恋爱脑", percentage: "28%", evaluations: [
+        "你有恋爱脑的倾向，但好在还有一丝理智在苦苦支撑。",
+        "你会为对方改变，但还没到失去自我的地步——暂时。",
+        "小心，你离重度只差一个「已读不回」的距离。"
+      ]},
+      C: { label: "理智型选手", percentage: "20%", evaluations: [
+        "你的恋爱脑已经被理智成功切除，堪称情感界的无影灯。",
+        "你爱归爱，但底线清晰，原则明确，绝不恋爱脑上头。",
+        "对方既庆幸你清醒，又遗憾你不够疯狂——人就是这么矛盾。"
+      ]},
+      D: { label: "闷骚型恋爱脑", percentage: "15%", evaluations: [
+        "你表面云淡风轻，内心戏比韩剧还多。",
+        "嘴上说「没事」，心里已经演完了一整部狗血剧。",
+        "你的恋爱脑不是没有，只是藏得太深——连你自己都骗了。"
+      ]},
+      AB: { label: "间歇性恋爱脑", percentage: "10%", evaluations: [
+        "你的恋爱脑是阵发性的，平时清醒，一上头就失控。",
+        "上一秒「我要独立」，下一秒「你在干嘛为什么不回我」。",
+        "你是最危险的那种——因为你总以为自己很理智。"
+      ]},
+      AC: { label: "双面人", percentage: "5%", evaluations: [
+        "你在恋爱和自我之间反复横跳，精分得令人心疼。",
+        "一半想为爱奋不顾身，一半想转身就跑。",
+        "你的内心OS：我到底要当恋爱脑还是事业脑？答案是：都不行。"
+      ]},
+      BD: { label: "暗恋型选手", percentage: "6%", evaluations: [
+        "你的恋爱脑全用在了暗恋上，正主根本不知道。",
+        "对方一个眼神你能解读出三层含义，其实人家只是近视。",
+        "你的恋爱是独角戏，观众只有你自己——和你的备忘录。"
+      ]},
+      CD: { label: "佛系恋爱人", percentage: "4%", evaluations: [
+        "你对恋爱的态度：有也行，没有也行，随缘吧。",
+        "别人在追爱，你在追剧；别人在emo，你在睡觉。",
+        "你不是不渴望爱情，你只是懒得主动——连心动都嫌累。"
+      ]}
+    }
+  },
+  holiday: {
+    title: "五一假期人格测试",
+    questions: [
+      { text: "五一放假前最后一小时，你在？", options: [
+        { text: "还在认真工作，站好最后一班岗", type: "A" },
+        { text: "已经在规划假期行程了", type: "B" },
+        { text: "工位上坐着，灵魂已经到家了", type: "C" },
+        { text: "发朋友圈倒计时，仪式感拉满", type: "D" }
+      ]},
+      { text: "五一你选择怎么过？", options: [
+        { text: "报个学习班，假期是弯道超车的好机会", type: "A" },
+        { text: "出去旅游，朋友圈不能输", type: "B" },
+        { text: "在家躺5天，能不下床就不下", type: "C" },
+        { text: "前两天躺，后两天玩，最后一天焦虑", type: "D" }
+      ]},
+      { text: "景点人山人海，你？", options: [
+        { text: "来都来了，挤一挤又何妨", type: "A" },
+        { text: "拍照打卡就走，绝不恋战", type: "B" },
+        { text: "看到人多直接掉头回家", type: "C" },
+        { text: "边挤边发朋友圈：人好多啊好开心（假的）", type: "D" }
+      ]},
+      { text: "假期第二天，你的状态？", options: [
+        { text: "按计划执行，行程排得满满当当", type: "A" },
+        { text: "玩得很开心，但已经开始累了", type: "B" },
+        { text: "还没出过门，床是我最好的朋友", type: "C" },
+        { text: "计划全打乱了，但无所谓", type: "D" }
+      ]},
+      { text: "假期朋友约你出门，你？", options: [
+        { text: "约！社交不能断", type: "A" },
+        { text: "看情况，近的话可以考虑", type: "B" },
+        { text: "不想动，下次一定", type: "C" },
+        { text: "嘴上答应，到时候看心情", type: "D" }
+      ]},
+      { text: "假期花销超预算了，你？", options: [
+        { text: "没关系，假期嘛，开心最重要", type: "A" },
+        { text: "有点心疼，但花都花了", type: "B" },
+        { text: "本来就没什么花销，躺家不花钱", type: "C" },
+        { text: "开始算账，然后默默心痛", type: "D" }
+      ]},
+      { text: "假期最后一天晚上，你？", options: [
+        { text: "整理照片，发朋友圈总结", type: "A" },
+        { text: "开始焦虑明天上班，睡不着", type: "D" },
+        { text: "还在玩，明天的事明天再说", type: "B" },
+        { text: "早早就睡了，为明天储备能量", type: "C" }
+      ]},
+      { text: "假期你最大的收获是？", options: [
+        { text: "完成了学习计划，充实！", type: "A" },
+        { text: "拍了一堆美照，朋友圈素材够了", type: "B" },
+        { text: "睡够了，精神饱满", type: "C" },
+        { text: "好像什么都没做，但也不后悔", type: "D" }
+      ]},
+      { text: "假期结束回到工位，你的心情？", options: [
+        { text: "元气满满，休息好了继续冲", type: "A" },
+        { text: "有点不想上班，但能接受", type: "B" },
+        { text: "灵魂还在假期，身体已经打卡", type: "C" },
+        { text: "已经在倒计时下一个假期了", type: "D" }
+      ]},
+      { text: "如果假期可以无限延长，你？", options: [
+        { text: "还是会找事做，闲不住", type: "A" },
+        { text: "环游世界，看遍风景", type: "B" },
+        { text: "永远躺下去，这就是我的终极梦想", type: "C" },
+        { text: "先躺一个月，再考虑要不要动", type: "D" }
+      ]}
+    ],
+    results: {
+      A: { label: "假期卷王", percentage: "8%", evaluations: [
+        "放假对你来说只是换个地方卷，你的假期比上班还忙。",
+        "别人在躺平，你在学习；别人在旅游，你在充电。",
+        "你的人生没有假期，只有「换个姿势努力」。"
+      ]},
+      B: { label: "打卡型选手", percentage: "30%", evaluations: [
+        "你的假期就是一场大型打卡活动，不去几个景点等于白放。",
+        "朋友圈九宫格是你的勋章，定位是你的军功章。",
+        "你玩的不是假期，是朋友圈的点赞数。"
+      ]},
+      C: { label: "躺平型选手", percentage: "25%", evaluations: [
+        "你的假期只有两个姿势：躺着和翻身。",
+        "床是你最忠诚的伙伴，外卖是你最亲密的朋友。",
+        "你不是在休息，你是在进行一场与床的深度对话。"
+      ]},
+      D: { label: "焦虑型选手", percentage: "15%", evaluations: [
+        "你的假期被焦虑填满——玩的时候觉得浪费时间，躺的时候觉得应该出门。",
+        "假期前规划满满，假期中一事无成，假期后更加焦虑。",
+        "你的假期不是用来放松的，是用来证明自己有多纠结的。"
+      ]},
+      AB: { label: "精致假期人", percentage: "10%", evaluations: [
+        "你的假期精致到令人发指——行程、穿搭、美食全都要完美。",
+        "你不是在度假，你是在拍生活方式广告。",
+        "你的假期比上班还累，但你乐在其中——毕竟朋友圈需要你。"
+      ]},
+      AC: { label: "薛定谔的假期", percentage: "5%", evaluations: [
+        "你的假期处于「卷」和「躺」的叠加态，直到有人问你才坍缩。",
+        "上午还在学习，下午就开始躺平，一天体验两种人生。",
+        "你是最真实的打工人——既想努力又想摆烂，两头都占。"
+      ]},
+      BD: { label: "佛系度假人", percentage: "4%", evaluations: [
+        "你对假期没有执念，去哪都行，干啥都行，随缘。",
+        "别人精心规划，你随机漫步；别人打卡拍照，你随走随停。",
+        "你的假期哲学：计划赶不上变化，不如没有计划。"
+      ]},
+      CD: { label: "回血型选手", percentage: "3%", evaluations: [
+        "你的假期只有一个目的——把打工消耗的血条回满。",
+        "不社交、不出门、不折腾，安静地做一株植物。",
+        "你不是在浪费假期，你是在为下一个工作周期储能。"
+      ]}
+    }
+  }
+};
+
+// ==================== 全局状态 ====================
+let currentTest = null;
+let currentQuestionIndex = 0;
+let answers = [];
+let currentResult = null;
+
+// ==================== 页面路由 ====================
+function showPage(pageId) {
+  document.querySelectorAll('.page').forEach(p => {
+    p.classList.remove('active');
+  });
+  document.getElementById(pageId).classList.add('active');
+  window.scrollTo(0, 0);
+}
+
+// ==================== 开始测试 ====================
+function startTest(testType) {
+  // 检查是否有保存的进度
+  const saved = loadProgress();
+  if (saved && saved.testType === testType && saved.currentIndex < 10) {
+    currentTest = testType;
+    currentQuestionIndex = saved.currentIndex;
+    answers = saved.answers;
+  } else {
+    currentTest = testType;
+    currentQuestionIndex = 0;
+    answers = [];
+  }
+  showPage('test-page');
+  renderQuestion();
+}
+
+// ==================== 渲染题目 ====================
+function renderQuestion() {
+  const test = TEST_DATA[currentTest];
+  const question = test.questions[currentQuestionIndex];
+
+  // 进度
+  const progress = ((currentQuestionIndex + 1) / test.questions.length) * 100;
+  document.getElementById('progress-text').textContent = `${currentQuestionIndex + 1}/${test.questions.length}`;
+  document.getElementById('progress-bar').style.width = progress + '%';
+
+  // 题目
+  document.getElementById('question-text').textContent = question.text;
+
+  // 选项
+  const container = document.getElementById('options-container');
+  container.innerHTML = '';
+  question.options.forEach((opt, i) => {
+    const btn = document.createElement('button');
+    btn.className = 'btn-black';
+    btn.textContent = opt.text;
+    btn.onclick = () => selectOption(opt.type);
+    container.appendChild(btn);
+  });
+}
+
+// ==================== 选择选项 ====================
+function selectOption(type) {
+  answers.push(type);
+  currentQuestionIndex++;
+  saveProgress();
+
+  const test = TEST_DATA[currentTest];
+  if (currentQuestionIndex >= test.questions.length) {
+    // 答完了，计算结果
+    currentResult = calculateResult(currentTest, answers);
+    clearProgress();
+    showResult();
+  } else {
+    renderQuestion();
+  }
+}
+
+// ==================== 计算结果 ====================
+function calculateResult(testType, ans) {
+  const test = TEST_DATA[testType];
+  // 统计各类型出现次数
+  const counts = {};
+  ans.forEach(a => { counts[a] = (counts[a] || 0) + 1; });
+
+  // 排序找出前两个
+  const sorted = Object.entries(counts).sort((a, b) => b[1] - a[1]);
+  const top1 = sorted[0][0];
+  const top2 = sorted.length > 1 ? sorted[1][0] : null;
+
+  // 先尝试组合键
+  const comboKey1 = top1 + top2;
+  const comboKey2 = top2 ? (top2 + top1) : null;
+
+  if (test.results[comboKey1]) {
+    return { key: comboKey1, ...test.results[comboKey1] };
+  }
+  if (comboKey2 && test.results[comboKey2]) {
+    return { key: comboKey2, ...test.results[comboKey2] };
+  }
+  // 回退到主类型
+  if (test.results[top1]) {
+    return { key: top1, ...test.results[top1] };
+  }
+  // 默认
+  const firstKey = Object.keys(test.results)[0];
+  return { key: firstKey, ...test.results[firstKey] };
+}
+
+// ==================== 显示结果 ====================
+function showResult() {
+  showPage('result-page');
+
+  // 标签
+  document.getElementById('result-label').textContent = currentResult.label;
+
+  // Canvas标签图片
+  drawResultCanvas(currentResult.label);
+
+  // 占比
+  document.getElementById('result-percentage').textContent = '全国占比：' + currentResult.percentage;
+
+  // 评价
+  const evalContainer = document.getElementById('evaluations-container');
+  evalContainer.innerHTML = '';
+  currentResult.evaluations.forEach(ev => {
+    const p = document.createElement('p');
+    p.className = 'text-gray-700 text-center leading-relaxed text-base';
+    p.textContent = ev;
+    evalContainer.appendChild(p);
+  });
+}
+
+// ==================== Canvas绘制标签图 ====================
+function drawResultCanvas(label) {
+  const canvas = document.getElementById('result-canvas');
+  const ctx = canvas.getContext('2d');
+  const size = 200;
+  canvas.width = size;
+  canvas.height = size;
+
+  // 白底
+  ctx.fillStyle = '#ffffff';
+  ctx.fillRect(0, 0, size, size);
+
+  // 黑色边框
+  ctx.strokeStyle = '#000000';
+  ctx.lineWidth = 4;
+  ctx.strokeRect(8, 8, size - 16, size - 16);
+
+  // 标签文字
+  ctx.fillStyle = '#000000';
+  ctx.font = 'bold 28px "PingFang SC", "Microsoft YaHei", sans-serif';
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+
+  // 自动换行
+  const maxWidth = size - 40;
+  const lines = wrapText(ctx, label, maxWidth);
+  const lineHeight = 36;
+  const startY = size / 2 - ((lines.length - 1) * lineHeight) / 2;
+  lines.forEach((line, i) => {
+    ctx.fillText(line, size / 2, startY + i * lineHeight);
+  });
+}
+
+function wrapText(ctx, text, maxWidth) {
+  const chars = text.split('');
+  const lines = [];
+  let current = '';
+  for (const ch of chars) {
+    const test = current + ch;
+    if (ctx.measureText(test).width > maxWidth && current) {
+      lines.push(current);
+      current = ch;
+    } else {
+      current = test;
+    }
+  }
+  if (current) lines.push(current);
+  return lines;
+}
+
+// ==================== 复制结果 ====================
+function copyResult() {
+  const test = TEST_DATA[currentTest];
+  let text = `【${test.title}】\n`;
+  text += `我的结果是：${currentResult.label}\n`;
+  text += `全国占比：${currentResult.percentage}\n\n`;
+  currentResult.evaluations.forEach(ev => { text += ev + '\n\n'; });
+  text += '来测测你是什么人格？';
+
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(text).then(() => showToast('复制成功'));
+  } else {
+    const ta = document.createElement('textarea');
+    ta.value = text;
+    ta.style.position = 'fixed';
+    ta.style.opacity = '0';
+    document.body.appendChild(ta);
+    ta.select();
+    document.execCommand('copy');
+    document.body.removeChild(ta);
+    showToast('复制成功');
+  }
+}
+
+// ==================== 生成分享图 ====================
+function generateShareImage() {
+  const W = 1080, H = 1920;
+  const canvas = document.createElement('canvas');
+  canvas.width = W;
+  canvas.height = H;
+  const ctx = canvas.getContext('2d');
+  const test = TEST_DATA[currentTest];
+
+  // 白底
+  ctx.fillStyle = '#ffffff';
+  ctx.fillRect(0, 0, W, H);
+
+  // 顶部黑条
+  ctx.fillStyle = '#000000';
+  ctx.fillRect(0, 0, W, 8);
+
+  // 测试标题
+  ctx.fillStyle = '#737373';
+  ctx.font = '32px "PingFang SC", "Microsoft YaHei", sans-serif';
+  ctx.textAlign = 'center';
+  ctx.fillText(test.title, W / 2, 160);
+
+  // 核心标签 - 超大号
+  ctx.fillStyle = '#000000';
+  ctx.font = 'bold 96px "PingFang SC", "Microsoft YaHei", sans-serif';
+  const labelLines = wrapTextCanvas(ctx, currentResult.label, W - 120, 110);
+  const labelStartY = 380;
+  labelLines.forEach((line, i) => {
+    ctx.fillText(line, W / 2, labelStartY + i * 110);
+  });
+
+  // 分割线
+  const afterLabelY = labelStartY + labelLines.length * 110 + 60;
+  ctx.strokeStyle = '#d4d4d4';
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  ctx.moveTo(120, afterLabelY);
+  ctx.lineTo(W - 120, afterLabelY);
+  ctx.stroke();
+
+  // 全国占比
+  ctx.fillStyle = '#737373';
+  ctx.font = '36px "PingFang SC", "Microsoft YaHei", sans-serif';
+  ctx.fillText('全国占比：' + currentResult.percentage, W / 2, afterLabelY + 80);
+
+  // 评价内容
+  ctx.fillStyle = '#404040';
+  ctx.font = '34px "PingFang SC", "Microsoft YaHei", sans-serif';
+  let evalY = afterLabelY + 180;
+  currentResult.evaluations.forEach(ev => {
+    const evLines = wrapTextCanvas(ctx, ev, W - 200, 48);
+    evLines.forEach((line, i) => {
+      ctx.fillText(line, W / 2, evalY + i * 48);
+    });
+    evalY += evLines.length * 48 + 50;
+  });
+
+  // 底部
+  ctx.fillStyle = '#a3a3a3';
+  ctx.font = '28px "PingFang SC", "Microsoft YaHei", sans-serif';
+  ctx.fillText('来测测你是什么人格？', W / 2, H - 120);
+
+  // 底部黑条
+  ctx.fillStyle = '#000000';
+  ctx.fillRect(0, H - 8, W, 8);
+
+  // 下载
+  const dataUrl = canvas.toDataURL('image/png');
+  const link = document.createElement('a');
+  link.download = currentResult.label + '_测试结果.png';
+  link.href = dataUrl;
+  link.click();
+  showToast('分享图已生成');
+}
+
+function wrapTextCanvas(ctx, text, maxWidth, lineHeight) {
+  const chars = text.split('');
+  const lines = [];
+  let current = '';
+  for (const ch of chars) {
+    const test = current + ch;
+    if (ctx.measureText(test).width > maxWidth && current) {
+      lines.push(current);
+      current = ch;
+    } else {
+      current = test;
+    }
+  }
+  if (current) lines.push(current);
+  return lines;
+}
+
+// ==================== 重新测试 ====================
+function restartTest() {
+  currentTest = null;
+  currentQuestionIndex = 0;
+  answers = [];
+  currentResult = null;
+  clearProgress();
+  showPage('home-page');
+}
+
+// ==================== 数据持久化 ====================
+function saveProgress() {
+  try {
+    const data = {
+      testType: currentTest,
+      currentIndex: currentQuestionIndex,
+      answers: answers,
+      timestamp: Date.now()
+    };
+    localStorage.setItem('emotion_test_progress', JSON.stringify(data));
+  } catch (e) {}
+}
+
+function loadProgress() {
+  try {
+    const raw = localStorage.getItem('emotion_test_progress');
+    if (!raw) return null;
+    const data = JSON.parse(raw);
+    if (data && typeof data.testType === 'string' && typeof data.currentIndex === 'number' && Array.isArray(data.answers)) {
+      return data;
+    }
+    return null;
+  } catch (e) {
+    return null;
+  }
+}
+
+function clearProgress() {
+  try {
+    localStorage.removeItem('emotion_test_progress');
+  } catch (e) {}
+}
+
+// ==================== Toast提示 ====================
+function showToast(msg) {
+  const toast = document.createElement('div');
+  toast.className = 'toast';
+  toast.textContent = msg;
+  document.body.appendChild(toast);
+  setTimeout(() => {
+    if (toast.parentNode) toast.parentNode.removeChild(toast);
+  }, 2000);
+}
+
+// ==================== 初始化：恢复进度 ====================
+(function init() {
+  const saved = loadProgress();
+  if (saved && saved.testType && saved.currentIndex < 10) {
+    currentTest = saved.testType;
+    currentQuestionIndex = saved.currentIndex;
+    answers = saved.answers;
+    showPage('test-page');
+    renderQuestion();
+  }
+})();
+</script>
+
+</body>
+</html>
