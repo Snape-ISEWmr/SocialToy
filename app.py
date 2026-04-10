@@ -1051,7 +1051,7 @@ def generate_label_image(label):
         y = start_y + i * line_height
         
         # 阴影
-        draw.text((x + 2, y + 2), line, fill='rgba(102, 126, 234, 0.3)', font=font)
+        draw.text((x + 2, y + 2), line, fill='#b8c5d6', font=font)
         # 主文字
         draw.text((x, y), line, fill='#2c3e50', font=font)
 
@@ -1149,7 +1149,7 @@ def generate_share_image(test_type, result_key):
         y = label_start_y + i * line_height
         
         # 卡通阴影
-        draw.text((x + 4, y + 4), line, fill='rgba(102, 126, 234, 0.2)', font=label_font)
+        draw.text((x + 4, y + 4), line, fill='#d4d9e0', font=label_font)
         # 主文字
         draw.text((x, y), line, fill='#2c3e50', font=label_font)
 
