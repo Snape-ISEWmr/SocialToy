@@ -1277,6 +1277,209 @@ def image_to_base64(img):
     img_str = base64.b64encode(buffered.getvalue()).decode()
     return img_str
 
+# ==================== 卡通人物生成方案 ====================
+# 方案一：使用预设的卡通头像库（推荐 - 无需API调用）
+def get_cartoon_avatar_local(result_key, test_type):
+    """
+    使用本地预设的卡通头像
+    根据不同的人格类型返回不同的卡通风格
+    """
+    # 卡通头像映射表 - 使用emoji组合或预设图片
+    avatar_map = {
+        "worker": {
+            "A": {"emoji": "👔💼⚡", "style": "职场精英", "color": "#667eea"},
+            "B": {"emoji": "☕😌🎯", "style": "摸鱼达人", "color": "#764ba2"},
+            "C": {"emoji": "🛋️😴💤", "style": "躺平大师", "color": "#f093fb"},
+            "D": {"emoji": "🎭📸✨", "style": "表演选手", "color": "#f5576c"},
+            "AB": {"emoji": "🤵📊💡", "style": "职场老手", "color": "#4facfe"},
+            "AC": {"emoji": "👑⏰🎯", "style": "打工皇帝", "color": "#00f2fe"},
+            "BD": {"emoji": "👻🤫🎭", "style": "隐形人", "color": "#43e97b"},
+            "CD": {"emoji": "🧘‍♂️🍃😊", "style": "佛系打工人", "color": "#38f9d7"}
+        },
+        "love": {
+            "A": {"emoji": "💕😍🔥", "style": "热恋型", "color": "#ff6b6b"},
+            "B": {"emoji": "💗🤗💭", "style": "温柔型", "color": "#ee5a24"},
+            "C": {"emoji": "❤️🧘‍♀️✨", "style": "理智型", "color": "#f9ca24"},
+            "D": {"emoji": "💔🎭🌙", "style": "闷骚型", "color": "#6c5ce7"},
+            "AB": {"emoji": "💓🎢😅", "style": "间歇型", "color": "#a29bfe"},
+            "AC": {"emoji": "🎭⚖️🤔", "style": "双面型", "color": "#fd79a8"},
+            "BD": {"emoji": "💌🙈💭", "style": "暗恋型", "color": "#e84393"},
+            "CD": {"emoji": "💚🍃😊", "style": "佛系型", "color": "#00b894"}
+        },
+        "holiday": {
+            "A": {"emoji": "📚💪⚡", "style": "假期卷王", "color": "#636e72"},
+            "B": {"emoji": "📸✈️🌍", "style": "打卡型", "color": "#2d3436"},
+            "C": {"emoji": "🛏️😴💤", "style": "躺平型", "color": "#74b9ff"},
+            "D": {"emoji": "😰⏰💭", "style": "焦虑型", "color": "#0984e3"},
+            "AB": {"emoji": "✨📸🎨", "style": "精致型", "color": "#00cec9"},
+            "AC": {"emoji": "🎲🔄😅", "style": "薛定谔型", "color": "#81ecec"},
+            "BD": {"emoji": "🍃🚶‍♂️😊", "style": "佛系型", "color": "#55efc4"},
+            "CD": {"emoji": "🔋🧘‍♂️✨", "style": "回血型", "color": "#b2bec3"}
+        }
+    }
+
+    return avatar_map.get(test_type, {}).get(result_key, {"emoji": "🎭", "style": "神秘", "color": "#667eea"})
+
+# 方案二：使用Hugging Face Inference API（需要API Token）
+def generate_cartoon_avatar_hf(prompt, api_token=None):
+    """
+    使用Hugging Face的Stable Diffusion模型生成卡通头像
+    需要申请Hugging Face API Token: https://huggingface.co/settings/tokens
+
+    Args:
+        prompt: 提示词，如 "cute cartoon character, office worker, professional style"
+        api_token: Hugging Face API Token
+
+    Returns:
+        PIL.Image: 生成的图片
+    """
+    if not api_token:
+        # 如果没有API token，返回None，使用本地方案
+        return None
+
+    try:
+        API_URL = "https://api-inference.huggingface.co/models/stabilityai/stable-diffusion-xl-base-1.0"
+        headers = {"Authorization": f"Bearer {api_token}"}
+
+        # 添加卡通风格前缀
+        full_prompt = f"cute kawaii cartoon style, {prompt}, simple background, vibrant colors, chibi style"
+
+        payload = {
+            "inputs": full_prompt,
+            "parameters": {
+                "negative_prompt": "ugly, blurry, realistic, photo, detailed",
+                "num_inference_steps": 30
+            }
+        }
+
+        response = requests.post(API_URL, headers=headers, json=payload, timeout=30)
+
+        if response.status_code == 200:
+            img = Image.open(BytesIO(response.content))
+            return img
+        else:
+            return None
+    except Exception as e:
+        st.warning(f"AI生成失败，使用默认头像: {str(e)}")
+        return None
+
+# 方案三：使用开源API（如Pollinations.ai - 免费）
+def generate_cartoon_avatar_pollinations(prompt):
+    """
+    使用Pollinations.ai免费API生成卡通头像
+    无需API Key，完全免费
+
+    Args:
+        prompt: 提示词
+
+    Returns:
+        PIL.Image: 生成的图片
+    """
+    try:
+        # Pollinations.ai 免费API
+        full_prompt = f"cute cartoon kawaii style, {prompt}, simple background, vibrant colors, chibi character"
+
+        # 编码URL
+        encoded_prompt = requests.utils.quote(full_prompt)
+
+        # API URL
+        url = f"https://image.pollinations.ai/prompt/{encoded_prompt}?width=512&height=512&nologo=true"
+
+        response = requests.get(url, timeout=30)
+
+        if response.status_code == 200:
+            img = Image.open(BytesIO(response.content))
+            return img
+        else:
+            return None
+    except Exception as e:
+        st.warning(f"AI生成失败: {str(e)}")
+        return None
+
+# 方案四：使用DALL-E API（需要OpenAI API Key）
+def generate_cartoon_avatar_dalle(prompt, api_key=None):
+    """
+    使用OpenAI DALL-E生成卡通头像
+    需要OpenAI API Key
+
+    Args:
+        prompt: 提示词
+        api_key: OpenAI API Key
+
+    Returns:
+        PIL.Image: 生成的图片
+    """
+    if not api_key:
+        return None
+
+    try:
+        import openai
+        openai.api_key = api_key
+
+        full_prompt = f"cute cartoon character, {prompt}, kawaii style, simple background"
+
+        response = openai.Image.create(
+            prompt=full_prompt,
+            n=1,
+            size="512x512",
+            model="dall-e-3"
+        )
+
+        image_url = response['data'][0]['url']
+        img_response = requests.get(image_url)
+        img = Image.open(BytesIO(img_response.content))
+
+        return img
+    except Exception as e:
+        st.warning(f"DALL-E生成失败: {str(e)}")
+        return None
+
+# 统一的卡通头像生成接口
+def generate_cartoon_avatar(result_key, test_type, method="local", api_key=None):
+    """
+    统一的卡通头像生成接口
+
+    Args:
+        result_key: 结果键（如"A", "B", "C"等）
+        test_type: 测试类型（"worker", "love", "holiday"）
+        method: 生成方法（"local", "huggingface", "pollinations", "dalle"）
+        api_key: API密钥（某些方法需要）
+
+    Returns:
+        PIL.Image or dict: 生成的图片或本地头像信息
+    """
+    # 获取人格描述
+    test = TEST_DATA.get(test_type, {})
+    result = test.get("results", {}).get(result_key, {})
+    label = result.get("label", "神秘人格")
+
+    # 根据测试类型生成提示词
+    prompt_map = {
+        "worker": f"office worker character, {label}, professional yet relaxed",
+        "love": f"romantic character, {label}, loving and emotional",
+        "holiday": f"vacation character, {label}, relaxed and happy"
+    }
+    prompt = prompt_map.get(test_type, f"character, {label}")
+
+    if method == "local":
+        # 使用本地预设头像
+        return get_cartoon_avatar_local(result_key, test_type)
+
+    elif method == "pollinations":
+        # 使用Pollinations免费API
+        return generate_cartoon_avatar_pollinations(prompt)
+
+    elif method == "huggingface":
+        # 使用Hugging Face API
+        return generate_cartoon_avatar_hf(prompt, api_key)
+
+    elif method == "dalle":
+        # 使用DALL-E API
+        return generate_cartoon_avatar_dalle(prompt, api_key)
+
+    else:
+        return get_cartoon_avatar_local(result_key, test_type)
+
 # ==================== 页面状态管理 ====================
 if 'current_test' not in st.session_state:
     st.session_state.current_test = None
@@ -1383,6 +1586,21 @@ else:
 
     # 核心标签 - 大号动画
     st.markdown(f'<p class="result-label">{result["label"]}</p>', unsafe_allow_html=True)
+
+    # 卡通头像显示
+    avatar_info = generate_cartoon_avatar(st.session_state.result_key, st.session_state.current_test, method="local")
+
+    # 显示卡通头像（emoji组合）
+    st.markdown(f'''
+    <div style="text-align: center; margin-bottom: 2rem;">
+        <div style="font-size: 4rem; margin-bottom: 1rem; animation: bounceIn 0.6s ease-out;">
+            {avatar_info["emoji"]}
+        </div>
+        <div style="font-size: 0.875rem; color: {avatar_info["color"]}; letter-spacing: 0.1em; text-transform: uppercase; font-weight: 500;">
+            {avatar_info["style"]}
+        </div>
+    </div>
+    ''', unsafe_allow_html=True)
 
     # 标签图片
     label_img = generate_label_image(result["label"])
