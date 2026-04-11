@@ -9,6 +9,8 @@ from io import BytesIO
 import base64
 from PIL import Image, ImageDraw, ImageFont
 import os
+import requests
+import json
 
 # ==================== 页面配置 ====================
 st.set_page_config(
