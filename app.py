@@ -1099,37 +1099,40 @@ def calculate_result(test_type, answers):
     # 默认返回第一个结果
     return list(test["results"].keys())[0]
 
-def generate_label_image(label):
-    """生成标签图片 - 卡通风格"""
+def generate_label_image(label, character_style="default"):
+    """生成标签图片 - MBTI暗夜风格 + 卡通人物"""
     img_size = 400
-    img = Image.new('RGB', (img_size, img_size), color='#fff9f0')
+    # 使用暗夜主题背景色
+    img = Image.new('RGB', (img_size, img_size), color='#1a1a2e')
     draw = ImageDraw.Draw(img)
 
-    # 卡通风格圆角边框 - 渐变色
+    # MBTI风格渐变边框
     border_width = 8
-    # 绘制多层边框营造卡通效果
-    colors = ['#667eea', '#764ba2', '#9b59b6', '#8e44ad']
-    for i, color in enumerate(colors):
+    mbti_colors = ['#667eea', '#764ba2', '#f093fb', '#f5576c']
+    for i, color in enumerate(mbti_colors):
         offset = i * 2
         draw.rounded_rectangle(
-            [border_width - offset, border_width - offset, 
+            [border_width - offset, border_width - offset,
              img_size - border_width + offset, img_size - border_width + offset],
             radius=25,
             outline=color,
             width=3
         )
 
+    # 绘制MBTI风格卡通人物
+    draw_mbti_character(draw, img_size, character_style)
+
     # 尝试使用系统字体
     try:
-        font = ImageFont.truetype("msyhbd.ttc", 58)  # 粗体
+        font = ImageFont.truetype("msyhbd.ttc", 42)  # 调整字体大小以适应人物
     except:
         try:
-            font = ImageFont.truetype("Arial Unicode MS", 58)
+            font = ImageFont.truetype("Arial Unicode MS", 42)
         except:
             font = ImageFont.load_default()
 
-    # 绘制文字（支持自动换行）+ 卡通阴影效果
-    max_width = img_size - 80
+    # 绘制文字（支持自动换行）- 暗夜主题，放在底部
+    max_width = img_size - 60
     lines = []
     current_line = ""
 
@@ -1147,48 +1150,240 @@ def generate_label_image(label):
     if current_line:
         lines.append(current_line)
 
-    # 绘制每一行 - 添加阴影效果
-    line_height = 72
+    # 绘制每一行 - 暗夜主题发光效果，放在底部
+    line_height = 52
     total_height = len(lines) * line_height
-    start_y = (img_size - total_height) // 2 + line_height // 2
+    start_y = img_size - total_height - 30  # 放在底部
 
     for i, line in enumerate(lines):
         bbox = draw.textbbox((0, 0), line, font=font)
         text_width = bbox[2] - bbox[0]
         x = (img_size - text_width) // 2
         y = start_y + i * line_height
-        
-        # 阴影
-        draw.text((x + 2, y + 2), line, fill='#b8c5d6', font=font)
-        # 主文字
-        draw.text((x, y), line, fill='#2c3e50', font=font)
 
-    # 添加装饰元素 - 卡通星星
-    star_positions = [(50, 50), (350, 50), (50, 350), (350, 350), (200, 60), (200, 340)]
-    for star_x, star_y in star_positions:
-        # 简单的星星形状
-        points = [
-            (star_x, star_y - 10),
-            (star_x + 3, star_y - 3),
-            (star_x + 10, star_y),
-            (star_x + 3, star_y + 3),
-            (star_x, star_y + 10),
-            (star_x - 3, star_y + 3),
-            (star_x - 10, star_y),
-            (star_x - 3, star_y - 3)
-        ]
-        draw.polygon(points, fill='#f1c40f')
+        # 发光阴影
+        draw.text((x + 2, y + 2), line, fill='#667eea', font=font)
+        # 主文字 - 使用浅色
+        draw.text((x, y), line, fill='#e5e7eb', font=font)
 
     return img
 
+def get_character_style(test_type, result_key):
+    """根据测试类型和结果键获取对应的人物风格"""
+    # 为不同的测试结果分配不同的人物风格
+    style_mapping = {
+        "worker": {
+            "A": "energetic",      # 卷王之王 - 充满活力
+            "B": "calm",           # 摸鱼达人 - 冷静
+            "C": "cheerful",       # 躺平大师 - 开朗
+            "D": "mysterious",     # 表演型选手 - 神秘
+            "AB": "default",       # 职场老油条 - 默认
+            "AC": "energetic",     # 打工皇帝 - 充满活力
+            "BD": "calm",          # 隐形人 - 冷静
+            "CD": "cheerful"       # 佛系打工人 - 开朗
+        },
+        "love": {
+            "A": "energetic",      # 重度恋爱脑 - 充满活力
+            "B": "cheerful",       # 轻度恋爱脑 - 开朗
+            "C": "calm",           # 理智型选手 - 冷静
+            "D": "mysterious",     # 闷骚型恋爱脑 - 神秘
+            "AB": "energetic",     # 间歇性恋爱脑 - 充满活力
+            "AC": "mysterious",    # 双面人 - 神秘
+            "BD": "calm",          # 暗恋型选手 - 冷静
+            "CD": "cheerful"       # 佛系恋爱人 - 开朗
+        },
+        "holiday": {
+            "A": "energetic",      # 假期卷王 - 充满活力
+            "B": "cheerful",       # 打卡型选手 - 开朗
+            "C": "calm",           # 躺平型选手 - 冷静
+            "D": "mysterious",     # 焦虑型选手 - 神秘
+            "AB": "energetic",     # 精致假期人 - 充满活力
+            "AC": "mysterious",    # 薛定谔的假期 - 神秘
+            "BD": "calm",          # 佛系度假人 - 冷静
+            "CD": "cheerful"       # 回血型选手 - 开朗
+        }
+    }
+
+    return style_mapping.get(test_type, {}).get(result_key, "default")
+
+def draw_mbti_character(draw, img_size, style="default"):
+    """绘制MBTI风格卡通人物 - 16Personalities风格"""
+    center_x = img_size // 2
+    center_y = img_size // 2 - 20  # 稍微向上偏移，为文字留空间
+
+    # 根据风格选择配色方案 - 16Personalities风格
+    color_schemes = {
+        "default": {
+            "skin": "#F5E6D3",
+            "hair": "#2C3E50",
+            "eyes": "#3498db",
+            "shirt": "#E8F4F8",
+            "blush": "#FFE4E1",
+            "outline": "#2C3E50"
+        },
+        "energetic": {
+            "skin": "#F5E6D3",
+            "hair": "#E74C3C",
+            "eyes": "#E67E22",
+            "shirt": "#FFF5E6",
+            "blush": "#FFE4E1",
+            "outline": "#C0392B"
+        },
+        "calm": {
+            "skin": "#F5E6D3",
+            "hair": "#27AE60",
+            "eyes": "#2980B9",
+            "shirt": "#E8F8F5",
+            "blush": "#FFE4E1",
+            "outline": "#1E8449"
+        },
+        "mysterious": {
+            "skin": "#F5E6D3",
+            "hair": "#8E44AD",
+            "eyes": "#9B59B6",
+            "shirt": "#F4ECF7",
+            "blush": "#FFE4E1",
+            "outline": "#6C3483"
+        },
+        "cheerful": {
+            "skin": "#F5E6D3",
+            "hair": "#F39C12",
+            "eyes": "#D35400",
+            "shirt": "#FEF9E7",
+            "blush": "#FFE4E1",
+            "outline": "#D68910"
+        }
+    }
+
+    # 获取当前风格的配色
+    colors = color_schemes.get(style, color_schemes["default"])
+
+    # 1. 绘制身体（16Personalities风格 - 简洁几何形状）
+    # 身体主体 - 梯形设计
+    body_top_x = center_x - 35
+    body_bottom_x = center_x + 35
+    body_top_width = 50
+    body_bottom_width = 70
+    body_height = 80
+
+    # 绘制梯形身体
+    body_points = [
+        (center_x - body_top_width // 2, center_y + 10),
+        (center_x + body_top_width // 2, center_y + 10),
+        (center_x + body_bottom_width // 2, center_y + body_height),
+        (center_x - body_bottom_width // 2, center_y + body_height)
+    ]
+    draw.polygon(body_points, fill=colors["shirt"], outline=colors["outline"], width=2)
+
+    # 领口设计
+    draw.ellipse([center_x - 12, center_y + 10, center_x + 12, center_y + 25],
+                 fill=colors["skin"], outline=colors["outline"], width=2)
+
+    # 2. 绘制头部（16Personalities风格 - 圆形设计）
+    head_radius = 38
+    draw.ellipse([center_x - head_radius, center_y - head_radius,
+                 center_x + head_radius, center_y + head_radius],
+                 fill=colors["skin"], outline=colors["outline"], width=3)
+
+    # 3. 绘制头发（16Personalities风格 - 简洁几何设计）
+    if style == "energetic":
+        # 充满活力的短发设计
+        draw.ellipse([center_x - 42, center_y - 45, center_x + 42, center_y + 5],
+                     fill=colors["hair"], outline=colors["outline"], width=2)
+        draw.ellipse([center_x - 35, center_y - 52, center_x + 35, center_y - 15],
+                     fill=colors["hair"], outline=colors["outline"], width=2)
+    elif style == "calm":
+        # 冷静的长发设计
+        draw.ellipse([center_x - 45, center_y - 50, center_x + 45, center_y + 20],
+                     fill=colors["hair"], outline=colors["outline"], width=2)
+        draw.ellipse([center_x - 40, center_y - 55, center_x + 40, center_y - 20],
+                     fill=colors["hair"], outline=colors["outline"], width=2)
+    elif style == "mysterious":
+        # 神秘的中长发设计
+        draw.ellipse([center_x - 43, center_y - 48, center_x + 43, center_y + 12],
+                     fill=colors["hair"], outline=colors["outline"], width=2)
+        draw.ellipse([center_x - 38, center_y - 53, center_x + 38, center_y - 18],
+                     fill=colors["hair"], outline=colors["outline"], width=2)
+    elif style == "cheerful":
+        # 开朗的短发设计
+        draw.ellipse([center_x - 40, center_y - 48, center_x + 40, center_y + 8],
+                     fill=colors["hair"], outline=colors["outline"], width=2)
+        draw.ellipse([center_x - 35, center_y - 55, center_x + 35, center_y - 20],
+                     fill=colors["hair"], outline=colors["outline"], width=2)
+    else:
+        # 默认发型
+        draw.ellipse([center_x - 44, center_y - 50, center_x + 44, center_y + 10],
+                     fill=colors["hair"], outline=colors["outline"], width=2)
+        draw.ellipse([center_x - 39, center_y - 55, center_x + 39, center_y - 20],
+                     fill=colors["hair"], outline=colors["outline"], width=2)
+
+    # 4. 绘制眼睛（16Personalities风格 - 简洁几何设计）
+    eye_size = 8
+    eye_spacing = 18
+
+    # 左眼
+    draw.ellipse([center_x - eye_spacing - eye_size, center_y - 8,
+                 center_x - eye_spacing + eye_size, center_y + 8],
+                 fill=colors["eyes"], outline=colors["outline"], width=2)
+    # 右眼
+    draw.ellipse([center_x + eye_spacing - eye_size, center_y - 8,
+                 center_x + eye_spacing + eye_size, center_y + 8],
+                 fill=colors["eyes"], outline=colors["outline"], width=2)
+
+    # 5. 绘制嘴巴（16Personalities风格 - 简洁线条）
+    mouth_y = center_y + 18
+    if style == "energetic":
+        # 开心的微笑
+        draw.arc([center_x - 10, mouth_y - 5, center_x + 10, mouth_y + 5],
+                 start=0, end=180, fill=colors["outline"], width=2)
+    elif style == "calm":
+        # 平静的微笑
+        draw.arc([center_x - 8, mouth_y - 3, center_x + 8, mouth_y + 3],
+                 start=0, end=180, fill=colors["outline"], width=2)
+    elif style == "mysterious":
+        # 神秘的微笑
+        draw.arc([center_x - 6, mouth_y - 2, center_x + 6, mouth_y + 2],
+                 start=0, end=180, fill=colors["outline"], width=2)
+    elif style == "cheerful":
+        # 大大的笑容
+        draw.arc([center_x - 12, mouth_y - 6, center_x + 12, mouth_y + 6],
+                 start=0, end=180, fill=colors["outline"], width=2)
+    else:
+        # 默认微笑
+        draw.arc([center_x - 8, mouth_y - 3, center_x + 8, mouth_y + 3],
+                 start=0, end=180, fill=colors["outline"], width=2)
+
+    # 6. 绘制腮红（16Personalities风格 - 淡雅设计）
+    blush_size = 6
+    draw.ellipse([center_x - 20, center_y + 5, center_x - 20 + blush_size, center_y + 5 + blush_size],
+                 fill=colors["blush"])
+    draw.ellipse([center_x + 20 - blush_size, center_y + 5, center_x + 20, center_y + 5 + blush_size],
+                 fill=colors["blush"])
+
+    # 7. 添加16Personalities风格装饰元素
+    # 简洁的几何装饰 - 顶部小圆点
+    dot_positions = [
+        (center_x - 15, center_y - 65),
+        (center_x, center_y - 70),
+        (center_x + 15, center_y - 65)
+    ]
+    for dot_x, dot_y in dot_positions:
+        draw.ellipse([dot_x - 3, dot_y - 3, dot_x + 3, dot_y + 3],
+                     fill=colors["outline"])
+
+    # 胸前装饰 - 简洁的几何图形
+    decoration_y = center_y + 40
+    draw.ellipse([center_x - 8, decoration_y - 8, center_x + 8, decoration_y + 8],
+                 fill=colors["eyes"], outline=colors["outline"], width=2)
+
 def generate_share_image(test_type, result_key):
-    """生成分享图片 - 卡通游戏风格"""
+    """生成分享图片 - MBTI暗夜风格"""
     test = TEST_DATA[test_type]
     result = test["results"][result_key]
 
-    # 创建画布 (9:16 比例)
+    # 创建画布 (9:16 比例) - 暗夜主题背景
     width, height = 1080, 1920
-    img = Image.new('RGB', (width, height), color='#fff9f0')
+    img = Image.new('RGB', (width, height), color='#1a1a2e')
     draw = ImageDraw.Draw(img)
 
     # 尝试加载字体
@@ -1246,7 +1441,7 @@ def generate_share_image(test_type, result_key):
     if current_line:
         label_lines.append(current_line)
 
-    # 绘制标签文字 - 卡通风格
+    # 绘制标签文字 - MBTI暗夜风格
     label_start_y = 400
     line_height = 112
 
@@ -1255,11 +1450,11 @@ def generate_share_image(test_type, result_key):
         text_width = bbox[2] - bbox[0]
         x = (width - text_width) // 2
         y = label_start_y + i * line_height
-        
-        # 卡通阴影
-        draw.text((x + 4, y + 4), line, fill='#d4d9e0', font=label_font)
-        # 主文字
-        draw.text((x, y), line, fill='#2c3e50', font=label_font)
+
+        # 发光阴影
+        draw.text((x + 4, y + 4), line, fill='#667eea', font=label_font)
+        # 主文字 - 暗夜主题浅色
+        draw.text((x, y), line, fill='#e5e7eb', font=label_font)
 
     # 绘制卡通装饰分割线 - 彩虹色
     after_label_y = label_start_y + len(label_lines) * line_height + 70
@@ -1315,10 +1510,10 @@ def generate_share_image(test_type, result_key):
             bubble_w = text_width + bubble_padding * 2
             bubble_h = text_height + bubble_padding
             
-            # 不同评价使用不同颜色
-            bubble_colors = ['#f8f9ff', '#fff5f5', '#f0fdf4']
+            # 不同评价使用不同颜色 - 暗夜主题
+            bubble_colors = ['#2a2a4e', '#3a3a5e', '#4a4a6e']
             bubble_color = bubble_colors[i % len(bubble_colors)]
-            
+
             draw.rounded_rectangle(
                 [bubble_x, bubble_y, bubble_x + bubble_w, bubble_y + bubble_h],
                 radius=16,
@@ -1326,9 +1521,9 @@ def generate_share_image(test_type, result_key):
                 outline='#667eea',
                 width=2
             )
-            
-            # 文字
-            draw.text((x, y), line, fill='#374151', font=content_font)
+
+            # 文字 - 暗夜主题浅色
+            draw.text((x, y), line, fill='#e5e7eb', font=content_font)
 
     # 绘制底部彩虹分割线
     footer_line_y = height - 180
@@ -1336,11 +1531,11 @@ def generate_share_image(test_type, result_key):
         y_pos = footer_line_y + i * line_height_div
         draw.line([(80, y_pos), (width - 80, y_pos)], fill=color, width=4)
 
-    # 绘制底部文字 - 卡通风格
+    # 绘制底部文字 - MBTI暗夜风格
     footer_text = "来测测你是什么人格？"
     footer_bbox = draw.textbbox((0, 0), footer_text, font=small_font)
     footer_width = footer_bbox[2] - footer_bbox[0]
-    draw.text(((width - footer_width) // 2, height - 130), footer_text, fill='#764ba2', font=small_font)
+    draw.text(((width - footer_width) // 2, height - 130), footer_text, fill='#e5e7eb', font=small_font)
 
     # 添加卡通装饰元素 - 星星和圆点
     # 随机位置的星星
@@ -1664,6 +1859,28 @@ def generate_cartoon_avatar(result_key, test_type, method="local", api_key=None)
     else:
         return get_cartoon_avatar_local(result_key, test_type)
 
+# ==================== 图片预生成功能 ====================
+def pre_generate_all_result_images():
+    """预生成所有测试结果的标签图片"""
+    if not st.session_state.result_images_cache:
+        # 为每个测试类型生成所有结果的图片
+        for test_type, test_data in TEST_DATA.items():
+            st.session_state.result_images_cache[test_type] = {}
+            for result_key, result_data in test_data["results"].items():
+                # 获取对应的人物风格
+                character_style = get_character_style(test_type, result_key)
+                # 生成标签图片（带人物风格）
+                label_img = generate_label_image(result_data["label"], character_style)
+                # 转换为base64便于存储
+                img_base64 = image_to_base64(label_img)
+                st.session_state.result_images_cache[test_type][result_key] = img_base64
+
+def get_cached_image(test_type, result_key):
+    """获取缓存的图片"""
+    if test_type in st.session_state.result_images_cache and result_key in st.session_state.result_images_cache[test_type]:
+        return st.session_state.result_images_cache[test_type][result_key]
+    return None
+
 # ==================== 页面状态管理 ====================
 if 'current_test' not in st.session_state:
     st.session_state.current_test = None
@@ -1679,6 +1896,9 @@ if 'immersive_mode' not in st.session_state:
     st.session_state.immersive_mode = False
 if 'show_voice_evaluation' not in st.session_state:
     st.session_state.show_voice_evaluation = False
+# 图片缓存 - 存储所有测试结果的预生成图片
+if 'result_images_cache' not in st.session_state:
+    st.session_state.result_images_cache = {}
 
 # ==================== URL路由处理 ====================
 query_params = st.query_params
@@ -1691,6 +1911,8 @@ if 'test' in query_params:
         st.session_state.result_key = None
         st.session_state.show_result = False
         st.session_state.immersive_mode = True
+        # 预生成所有结果图片
+        pre_generate_all_result_images()
         st.rerun()
 
 # ==================== 沉浸式模式切换 ====================
@@ -1719,6 +1941,8 @@ if st.session_state.current_test is None and not st.session_state.show_voice_eva
             st.session_state.result_key = None
             st.session_state.show_result = False
             st.session_state.immersive_mode = True
+            # 预生成所有结果图片
+            pre_generate_all_result_images()
             st.rerun()
 
     st.markdown('</div>', unsafe_allow_html=True)
@@ -1871,11 +2095,21 @@ else:
     </div>
     ''', unsafe_allow_html=True)
 
-    # 标签图片
-    label_img = generate_label_image(result["label"])
-    st.markdown('<div class="image-container">', unsafe_allow_html=True)
-    st.image(label_img, width=180)
-    st.markdown('</div>', unsafe_allow_html=True)
+    # 标签图片 - 使用缓存的预生成图片
+    cached_img = get_cached_image(st.session_state.current_test, st.session_state.result_key)
+    if cached_img:
+        # 使用缓存的图片
+        st.markdown(f'''
+        <div style="text-align: center; margin: 2rem 0;">
+            <img src="data:image/png;base64,{cached_img}" width="180" style="border-radius: 12px; box-shadow: 0 4px 20px rgba(102, 126, 234, 0.3);">
+        </div>
+        ''', unsafe_allow_html=True)
+    else:
+        # 如果缓存中没有，则实时生成
+        label_img = generate_label_image(result["label"])
+        st.markdown('<div class="image-container">', unsafe_allow_html=True)
+        st.image(label_img, width=180)
+        st.markdown('</div>', unsafe_allow_html=True)
 
     # 全国占比
     st.markdown(f'<p class="percentage-text">全国占比 {result["percentage"]}</p>', unsafe_allow_html=True)

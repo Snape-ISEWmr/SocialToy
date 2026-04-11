@@ -1,0 +1,330 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SocialToy - MBTI风格人物图片预览汇总</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background: linear-gradient(135deg, #0f0f0f 0%, #1a1a2e 100%);
+            color: #e5e7eb;
+            font-family: 'Microsoft YaHei', Arial, sans-serif;
+            padding: 20px;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 40px;
+            padding: 20px;
+            background: rgba(31, 41, 55, 0.8);
+            border-radius: 16px;
+            border: 1px solid #374151;
+        }
+
+        .header h1 {
+            color: #667eea;
+            text-shadow: 0 0 20px rgba(102, 126, 234, 0.5);
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            color: #9ca3af;
+            font-size: 1rem;
+        }
+
+        .test-section {
+            margin-bottom: 40px;
+            padding: 30px;
+            background: rgba(31, 41, 55, 0.6);
+            border-radius: 16px;
+            border: 1px solid #374151;
+        }
+
+        .test-title {
+            color: #764ba2;
+            text-shadow: 0 0 10px rgba(118, 75, 162, 0.5);
+            font-size: 1.8rem;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #667eea;
+        }
+
+        .results-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 20px;
+            margin-top: 20px;
+        }
+
+        .result-card {
+            background: rgba(42, 42, 78, 0.8);
+            border-radius: 12px;
+            padding: 20px;
+            text-align: center;
+            border: 1px solid #667eea;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .result-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 25px rgba(102, 126, 234, 0.4);
+        }
+
+        .result-image {
+            width: 200px;
+            height: 200px;
+            object-fit: contain;
+            border-radius: 12px;
+            margin-bottom: 15px;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+        }
+
+        .result-label {
+            color: #e5e7eb;
+            font-size: 1.2rem;
+            font-weight: bold;
+            margin-bottom: 8px;
+            text-shadow: 0 0 10px rgba(102, 126, 234, 0.3);
+        }
+
+        .result-key {
+            color: #667eea;
+            font-size: 0.9rem;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+
+        .result-percentage {
+            color: #9ca3af;
+            font-size: 0.85rem;
+        }
+
+        .style-tag {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 0.75rem;
+            margin-top: 8px;
+            display: inline-block;
+        }
+
+        @media (max-width: 768px) {
+            .results-grid {
+                grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            }
+
+            .header h1 {
+                font-size: 1.8rem;
+            }
+
+            .test-title {
+                font-size: 1.4rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>🎭 SocialToy - MBTI风格人物图片预览</h1>
+        <p>情绪裂变标签测试网站 - 暗夜主题风格 + 卡通人物展示</p>
+    </div>
+
+    <div class="test-section">
+        <h2 class="test-title">🏢 打工人摸鱼人格测试</h2>
+        <div class="results-grid">
+            <div class="result-card">
+                <img src="preview_worker_A.png" alt="卷王之王" class="result-image">
+                <div class="result-key">类型 A</div>
+                <div class="result-label">卷王之王</div>
+                <div class="result-percentage">全国占比: 5%</div>
+                <div class="style-tag">风格: energetic</div>
+            </div>
+            <div class="result-card">
+                <img src="preview_worker_B.png" alt="摸鱼达人" class="result-image">
+                <div class="result-key">类型 B</div>
+                <div class="result-label">摸鱼达人</div>
+                <div class="result-percentage">全国占比: 18%</div>
+                <div class="style-tag">风格: calm</div>
+            </div>
+            <div class="result-card">
+                <img src="preview_worker_C.png" alt="躺平大师" class="result-image">
+                <div class="result-key">类型 C</div>
+                <div class="result-label">躺平大师</div>
+                <div class="result-percentage">全国占比: 25%</div>
+                <div class="style-tag">风格: cheerful</div>
+            </div>
+            <div class="result-card">
+                <img src="preview_worker_D.png" alt="表演型选手" class="result-image">
+                <div class="result-key">类型 D</div>
+                <div class="result-label">表演型选手</div>
+                <div class="result-percentage">全国占比: 15%</div>
+                <div class="style-tag">风格: mysterious</div>
+            </div>
+            <div class="result-card">
+                <img src="preview_worker_AB.png" alt="职场老油条" class="result-image">
+                <div class="result-key">类型 AB</div>
+                <div class="result-label">职场老油条</div>
+                <div class="result-percentage">全国占比: 12%</div>
+                <div class="style-tag">风格: default</div>
+            </div>
+            <div class="result-card">
+                <img src="preview_worker_AC.png" alt="打工皇帝" class="result-image">
+                <div class="result-key">类型 AC</div>
+                <div class="result-label">打工皇帝</div>
+                <div class="result-percentage">全国占比: 8%</div>
+                <div class="style-tag">风格: energetic</div>
+            </div>
+            <div class="result-card">
+                <img src="preview_worker_BD.png" alt="隐形人" class="result-image">
+                <div class="result-key">类型 BD</div>
+                <div class="result-label">隐形人</div>
+                <div class="result-percentage">全国占比: 10%</div>
+                <div class="style-tag">风格: calm</div>
+            </div>
+            <div class="result-card">
+                <img src="preview_worker_CD.png" alt="佛系打工人" class="result-image">
+                <div class="result-key">类型 CD</div>
+                <div class="result-label">佛系打工人</div>
+                <div class="result-percentage">全国占比: 7%</div>
+                <div class="style-tag">风格: cheerful</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="test-section">
+        <h2 class="test-title">❤️ 恋爱脑等级测试</h2>
+        <div class="results-grid">
+            <div class="result-card">
+                <img src="preview_love_A.png" alt="重度恋爱脑" class="result-image">
+                <div class="result-key">类型 A</div>
+                <div class="result-label">重度恋爱脑</div>
+                <div class="result-percentage">全国占比: 12%</div>
+                <div class="style-tag">风格: energetic</div>
+            </div>
+            <div class="result-card">
+                <img src="preview_love_B.png" alt="轻度恋爱脑" class="result-image">
+                <div class="result-key">类型 B</div>
+                <div class="result-label">轻度恋爱脑</div>
+                <div class="result-percentage">全国占比: 28%</div>
+                <div class="style-tag">风格: cheerful</div>
+            </div>
+            <div class="result-card">
+                <img src="preview_love_C.png" alt="理智型选手" class="result-image">
+                <div class="result-key">类型 C</div>
+                <div class="result-label">理智型选手</div>
+                <div class="result-percentage">全国占比: 20%</div>
+                <div class="style-tag">风格: calm</div>
+            </div>
+            <div class="result-card">
+                <img src="preview_love_D.png" alt="闷骚型恋爱脑" class="result-image">
+                <div class="result-key">类型 D</div>
+                <div class="result-label">闷骚型恋爱脑</div>
+                <div class="result-percentage">全国占比: 15%</div>
+                <div class="style-tag">风格: mysterious</div>
+            </div>
+            <div class="result-card">
+                <img src="preview_love_AB.png" alt="间歇性恋爱脑" class="result-image">
+                <div class="result-key">类型 AB</div>
+                <div class="result-label">间歇性恋爱脑</div>
+                <div class="result-percentage">全国占比: 10%</div>
+                <div class="style-tag">风格: energetic</div>
+            </div>
+            <div class="result-card">
+                <img src="preview_love_AC.png" alt="双面人" class="result-image">
+                <div class="result-key">类型 AC</div>
+                <div class="result-label">双面人</div>
+                <div class="result-percentage">全国占比: 5%</div>
+                <div class="style-tag">风格: mysterious</div>
+            </div>
+            <div class="result-card">
+                <img src="preview_love_BD.png" alt="暗恋型选手" class="result-image">
+                <div class="result-key">类型 BD</div>
+                <div class="result-label">暗恋型选手</div>
+                <div class="result-percentage">全国占比: 6%</div>
+                <div class="style-tag">风格: calm</div>
+            </div>
+            <div class="result-card">
+                <img src="preview_love_CD.png" alt="佛系恋爱人" class="result-image">
+                <div class="result-key">类型 CD</div>
+                <div class="result-label">佛系恋爱人</div>
+                <div class="result-percentage">全国占比: 4%</div>
+                <div class="style-tag">风格: cheerful</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="test-section">
+        <h2 class="test-title">🏖️ 五一假期人格测试</h2>
+        <div class="results-grid">
+            <div class="result-card">
+                <img src="preview_holiday_A.png" alt="假期卷王" class="result-image">
+                <div class="result-key">类型 A</div>
+                <div class="result-label">假期卷王</div>
+                <div class="result-percentage">全国占比: 8%</div>
+                <div class="style-tag">风格: energetic</div>
+            </div>
+            <div class="result-card">
+                <img src="preview_holiday_B.png" alt="打卡型选手" class="result-image">
+                <div class="result-key">类型 B</div>
+                <div class="result-label">打卡型选手</div>
+                <div class="result-percentage">全国占比: 30%</div>
+                <div class="style-tag">风格: cheerful</div>
+            </div>
+            <div class="result-card">
+                <img src="preview_holiday_C.png" alt="躺平型选手" class="result-image">
+                <div class="result-key">类型 C</div>
+                <div class="result-label">躺平型选手</div>
+                <div class="result-percentage">全国占比: 25%</div>
+                <div class="style-tag">风格: calm</div>
+            </div>
+            <div class="result-card">
+                <img src="preview_holiday_D.png" alt="焦虑型选手" class="result-image">
+                <div class="result-key">类型 D</div>
+                <div class="result-label">焦虑型选手</div>
+                <div class="result-percentage">全国占比: 15%</div>
+                <div class="style-tag">风格: mysterious</div>
+            </div>
+            <div class="result-card">
+                <img src="preview_holiday_AB.png" alt="精致假期人" class="result-image">
+                <div class="result-key">类型 AB</div>
+                <div class="result-label">精致假期人</div>
+                <div class="result-percentage">全国占比: 10%</div>
+                <div class="style-tag">风格: energetic</div>
+            </div>
+            <div class="result-card">
+                <img src="preview_holiday_AC.png" alt="薛定谔的假期" class="result-image">
+                <div class="result-key">类型 AC</div>
+                <div class="result-label">薛定谔的假期</div>
+                <div class="result-percentage">全国占比: 5%</div>
+                <div class="style-tag">风格: mysterious</div>
+            </div>
+            <div class="result-card">
+                <img src="preview_holiday_BD.png" alt="佛系度假人" class="result-image">
+                <div class="result-key">类型 BD</div>
+                <div class="result-label">佛系度假人</div>
+                <div class="result-percentage">全国占比: 4%</div>
+                <div class="style-tag">风格: calm</div>
+            </div>
+            <div class="result-card">
+                <img src="preview_holiday_CD.png" alt="回血型选手" class="result-image">
+                <div class="result-key">类型 CD</div>
+                <div class="result-label">回血型选手</div>
+                <div class="result-percentage">全国占比: 3%</div>
+                <div class="style-tag">风格: cheerful</div>
+            </div>
+        </div>
+    </div>
+
+    <div style="text-align: center; margin-top: 40px; color: #6b7280; font-size: 0.9rem;">
+        <p>🎨 MBTI暗夜主题风格 + 卡通人物 | 🚀 SocialToy情绪裂变标签测试网站</p>
+    </div>
+</body>
+</html>
