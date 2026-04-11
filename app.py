@@ -578,6 +578,52 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 # ==================== 测试数据 ====================
+# 声音评价模板库
+VOICE_EVALUATION_TEMPLATES = {
+    "情诗": [
+        "哇哦！这文笔，这意境，这深情！你是把莎士比亚和徐志摩的灵魂融合了吗？",
+        "读着读着，我的心都要化了。这哪里是情诗，这是丘比特的箭啊！",
+        "这水平，建议直接出版诗集，书名我都想好了：《撩人的一百种方式》",
+        "文采斐然，情深意切！对方看到这段话，估计已经感动得想给你打钱了",
+        "这文笔，这意境，建议去参加《中国诗词大会》，冠军非你莫属！",
+        "我读过的情诗不少，但这首...这首简直是情诗界的爱马仕！",
+        "这文字功底，不去当作家真是屈才了。建议直接出道，粉丝我第一个当！",
+        "深情而不矫情，浪漫而不油腻，这水平，教科书级别的！"
+    ],
+    "散文": [
+        "这文笔，这意境，这深度！你是把余秋雨和林清玄的灵魂融合了吗？",
+        "读着读着，我仿佛看到了江南烟雨、大漠孤烟...这画面感太强了！",
+        "这水平，建议直接出版散文集，书名我都想好了：《人间值得》",
+        "文字优美，意境深远！读完感觉灵魂都被洗涤了一遍",
+        "这文笔，建议去当语文老师，学生们肯定爱死你了",
+        "我读过的散文不少，但这篇...这篇简直是散文界的劳斯莱斯！",
+        "这文字功底，不去当作家真是屈才了。建议直接出道，我第一个买书！",
+        "优美而不做作，深刻而不晦涩，这水平，教科书级别的！"
+    ],
+    "通用": [
+        "这文笔，这水平，你是文曲星下凡吗？",
+        "读着读着，我感觉自己文化水平都提高了",
+        "这水平，建议直接出道，粉丝我第一个当！",
+        "文字功底深厚，表达能力一流，人才啊！",
+        "这文笔，建议去参加《中国好声音》...哦不对，是《中国好文章》！",
+        "我读过的文字不少，但这篇...这篇简直是文字界的爱马仕！",
+        "这水平，不去当作家真是屈才了。建议直接出版！",
+        "优美而不做作，深刻而不晦涩，这水平，教科书级别的！"
+    ]
+}
+
+# 辛辣点评模板（先抑后扬）
+SPICY_COMMENTS = [
+    "说实话，刚开始我觉得这文字有点...等等，我收回前言，这也太好了吧！",
+    "本来想挑点毛病的，但读完发现...我挑不出来啊！这水平太高了！",
+    "说实话，这文字让我有点嫉妒...嫉妒你为什么写得这么好！",
+    "我本来想给点建议的，但读完发现...我有什么资格给建议啊！",
+    "说实话，这水平让我有点自卑...自卑我为什么写不出这么好的文字！",
+    "本来想说点什么的，但读完发现...我只能说：牛逼！",
+    "说实话，这文字让我有点怀疑人生...怀疑我这些年读的书都白读了！",
+    "我本来想保持高冷的，但读完发现...我高冷不起来了，这也太好了！"
+]
+
 TEST_DATA = {
     "worker": {
         "title": "打工人摸鱼人格测试",
@@ -1277,6 +1323,84 @@ def image_to_base64(img):
     img_str = base64.b64encode(buffered.getvalue()).decode()
     return img_str
 
+# ==================== 声音评价功能 ====================
+import random
+
+def detect_text_type(text):
+    """
+    检测文本类型（情诗/散文/通用）
+    """
+    # 情诗关键词
+    love_keywords = ['爱', '情', '心', '思念', '想你', '爱你', '永远', '一生', '一世',
+                     '牵手', '拥抱', '吻', '亲爱的', '宝贝', '月光', '星辰', '玫瑰']
+
+    # 散文关键词
+    prose_keywords = ['岁月', '时光', '人生', '生命', '世界', '自然', '风景', '回忆',
+                      '故乡', '童年', '季节', '春天', '秋天', '雨', '风', '云']
+
+    # 统计关键词出现次数
+    love_count = sum(1 for keyword in love_keywords if keyword in text)
+    prose_count = sum(1 for keyword in prose_keywords if keyword in text)
+
+    # 判断类型
+    if love_count > prose_count and love_count >= 2:
+        return "情诗"
+    elif prose_count > love_count and prose_count >= 2:
+        return "散文"
+    else:
+        return "通用"
+
+def generate_voice_evaluation(text):
+    """
+    生成声音评价
+    返回：评价文本列表
+    """
+    # 检测文本类型
+    text_type = detect_text_type(text)
+
+    # 获取对应类型的评价模板
+    templates = VOICE_EVALUATION_TEMPLATES.get(text_type, VOICE_EVALUATION_TEMPLATES["通用"])
+
+    # 随机选择2-3条评价
+    num_evaluations = random.randint(2, 3)
+    selected_evaluations = random.sample(templates, min(num_evaluations, len(templates)))
+
+    # 有50%概率添加一条辛辣点评
+    if random.random() > 0.5:
+        spicy_comment = random.choice(SPICY_COMMENTS)
+        selected_evaluations.insert(0, spicy_comment)
+
+    return selected_evaluations, text_type
+
+def calculate_text_score(text):
+    """
+    计算文本得分（基于长度、情感词、修辞等）
+    """
+    score = 60  # 基础分
+
+    # 长度加分
+    if len(text) > 50:
+        score += 10
+    if len(text) > 100:
+        score += 10
+    if len(text) > 200:
+        score += 10
+
+    # 情感词加分
+    emotion_words = ['爱', '情', '心', '思念', '永远', '深情', '温柔', '美好']
+    emotion_count = sum(1 for word in emotion_words if word in text)
+    score += min(emotion_count * 3, 15)
+
+    # 修辞加分
+    rhetoric_marks = ['！', '？', '…', '～']
+    rhetoric_count = sum(text.count(mark) for mark in rhetoric_marks)
+    score += min(rhetoric_count * 2, 10)
+
+    # 限制最高分
+    score = min(score, 99)
+
+    return score
+
 # ==================== 卡通人物生成方案 ====================
 # 方案一：使用预设的卡通头像库（推荐 - 无需API调用）
 def get_cartoon_avatar_local(result_key, test_type):
@@ -1493,6 +1617,8 @@ if 'show_result' not in st.session_state:
     st.session_state.show_result = False
 if 'immersive_mode' not in st.session_state:
     st.session_state.immersive_mode = False
+if 'show_voice_evaluation' not in st.session_state:
+    st.session_state.show_voice_evaluation = False
 
 # ==================== URL路由处理 ====================
 query_params = st.query_params
@@ -1512,7 +1638,7 @@ if st.session_state.immersive_mode:
     st.markdown('<div class="immersive-mode"></div>', unsafe_allow_html=True)
 
 # ==================== 首页 ====================
-if st.session_state.current_test is None:
+if st.session_state.current_test is None and not st.session_state.show_voice_evaluation:
     # 页面标题
     st.markdown('<p class="subtitle">Personality Test</p>', unsafe_allow_html=True)
     st.markdown('<h1 class="main-title">当代人类<br>身份鉴定中心</h1>', unsafe_allow_html=True)
@@ -1537,8 +1663,91 @@ if st.session_state.current_test is None:
 
     st.markdown('</div>', unsafe_allow_html=True)
 
+    # 分割线
+    st.markdown('<div class="divider"></div>', unsafe_allow_html=True)
+
+    # 声音评价功能入口
+    st.markdown('<p style="text-align: center; color: #95a5a6; font-size: 0.875rem; margin-bottom: 1rem; letter-spacing: 0.1em; text-transform: uppercase;">或者...</p>', unsafe_allow_html=True)
+
+    st.markdown('<div class="button-container">', unsafe_allow_html=True)
+    if st.button("✍️ 文字点评 - 让我看看你的文采", key="voice_evaluation", help="提交你的情诗或散文，获得专业点评"):
+        st.session_state.show_voice_evaluation = True
+        st.rerun()
+    st.markdown('</div>', unsafe_allow_html=True)
+
     # 底部提示
     st.markdown('<p class="footer-text">每个测试都是一次独特的沉浸式体验</p>', unsafe_allow_html=True)
+
+# ==================== 声音评价页面 ====================
+elif st.session_state.show_voice_evaluation:
+    # 页面标题
+    st.markdown('<p class="subtitle">Voice Evaluation</p>', unsafe_allow_html=True)
+    st.markdown('<h1 class="main-title">文字点评<br>文采鉴定中心</h1>', unsafe_allow_html=True)
+
+    st.markdown('<p style="text-align: center; color: #7c8db8; margin-bottom: 2rem; font-size: 1rem;">提交你的情诗或散文，获得专业（拍马屁）点评</p>', unsafe_allow_html=True)
+
+    # 文本输入
+    user_text = st.text_area(
+        "请输入你的文字作品：",
+        height=200,
+        placeholder="在这里写下你的情诗、散文或任何文字...\n\n例如：\n月光如水，静静流淌在心间\n思念如风，轻轻吹过你的脸庞\n...",
+        max_chars=500
+    )
+
+    # 字数统计
+    if user_text:
+        st.markdown(f'<p style="text-align: right; color: #95a5a6; font-size: 0.75rem;">字数：{len(user_text)}/500</p>', unsafe_allow_html=True)
+
+    # 提交按钮
+    col1, col2, col3 = st.columns([1, 2, 1])
+    with col2:
+        if st.button("📝 提交点评", use_container_width=True, disabled=len(user_text) < 10):
+            if len(user_text) >= 10:
+                # 生成评价
+                evaluations, text_type = generate_voice_evaluation(user_text)
+                score = calculate_text_score(user_text)
+
+                # 显示结果
+                st.markdown('<div class="divider"></div>', unsafe_allow_html=True)
+
+                # 文本类型标签
+                st.markdown(f'''
+                <div style="text-align: center; margin-bottom: 2rem;">
+                    <span style="display: inline-block; padding: 0.5rem 1.5rem; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border-radius: 20px; font-size: 0.875rem; letter-spacing: 0.1em; text-transform: uppercase; font-weight: 500;">
+                        {text_type}作品
+                    </span>
+                </div>
+                ''', unsafe_allow_html=True)
+
+                # 得分显示
+                st.markdown(f'''
+                <div style="text-align: center; margin-bottom: 2rem;">
+                    <div style="font-size: 3rem; font-weight: 500; color: #2c3e50; margin-bottom: 0.5rem;">
+                        {score}分
+                    </div>
+                    <div style="font-size: 0.875rem; color: #95a5a6; letter-spacing: 0.1em; text-transform: uppercase;">
+                        文采指数
+                    </div>
+                </div>
+                ''', unsafe_allow_html=True)
+
+                # 评价内容
+                st.markdown('<div class="divider"></div>', unsafe_allow_html=True)
+                for eval_text in evaluations:
+                    st.markdown(f'<p class="evaluation-text">{eval_text}</p>', unsafe_allow_html=True)
+
+                # 分割线
+                st.markdown('<div class="divider"></div>', unsafe_allow_html=True)
+
+                # 返回按钮
+                if st.button("🏠 返回首页", key="back_from_voice"):
+                    st.session_state.show_voice_evaluation = False
+                    st.rerun()
+
+    # 返回按钮
+    if st.button("🏠 返回首页", key="back_home_voice"):
+        st.session_state.show_voice_evaluation = False
+        st.rerun()
 
 # ==================== 测试页面 ====================
 elif not st.session_state.show_result:
