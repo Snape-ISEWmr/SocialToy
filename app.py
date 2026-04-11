@@ -20,12 +20,51 @@ st.set_page_config(
     initial_sidebar_state="collapsed"
 )
 
-# ==================== 自定义CSS - 极简性冷淡风格（优化版）====================
+# ==================== 自定义CSS - MBTI风格暗色主题 ====================
 st.markdown("""
 <style>
-    /* 全局样式 - 小清新渐变背景 */
+    /* CSS变量系统 - 暗色主题 */
+    :root {
+        /* 暗色主题背景色 */
+        --bg-primary: #0f0f0f;
+        --bg-secondary: #1a1a2e;
+        --bg-tertiary: #1f2937;
+        --bg-card: rgba(31, 41, 55, 0.8);
+
+        /* 文字颜色 */
+        --text-primary: #e5e7eb;
+        --text-secondary: #9ca3af;
+        --text-tertiary: #6b7280;
+        --text-muted: #4b5563;
+
+        /* 强调色渐变 */
+        --accent-start: #667eea;
+        --accent-end: #764ba2;
+        --accent-secondary: #f093fb;
+        --accent-secondary-end: #f5576c;
+
+        /* 发光效果 */
+        --glow-primary: rgba(102, 126, 234, 0.5);
+        --glow-secondary: rgba(118, 75, 162, 0.5);
+        --glow-accent: rgba(240, 147, 251, 0.5);
+
+        /* 边框和分割线 */
+        --border-primary: #374151;
+        --border-secondary: #4b5563;
+        --divider-gradient-start: transparent;
+        --divider-gradient-mid: #374151;
+        --divider-gradient-end: transparent;
+
+        /* 阴影效果 */
+        --shadow-sm: rgba(0, 0, 0, 0.3);
+        --shadow-md: rgba(0, 0, 0, 0.4);
+        --shadow-lg: rgba(0, 0, 0, 0.5);
+    }
+
+    /* 全局样式 - 暗色渐变背景 */
     .stApp {
-        background: linear-gradient(135deg, #fdfbf7 0%, #f8f9fa 100%);
+        background: linear-gradient(135deg, var(--bg-primary) 0%, var(--bg-secondary) 100%);
+        color: var(--text-primary);
     }
 
     /* 隐藏Streamlit默认元素 */
@@ -55,26 +94,28 @@ st.markdown("""
         max-width: 800px;
     }
 
-    /* 标题样式 - 小清新 */
+    /* 标题样式 - 暗色主题 */
     .main-title {
         font-size: clamp(1.875rem, 5vw, 3rem);
-        font-weight: 400;
-        color: #2c3e50;
+        font-weight: 500;
+        color: var(--text-primary);
         text-align: center;
         margin-bottom: 4rem;
         line-height: 1.4;
         letter-spacing: 0.02em;
+        text-shadow: 0 0 20px var(--glow-primary);
     }
 
-    /* 副标题/描述文字 - 小清新 */
+    /* 副标题/描述文字 - 暗色主题 */
     .subtitle {
         font-size: 0.875rem;
-        color: #95a5a6;
+        color: var(--text-secondary);
         text-align: center;
         letter-spacing: 0.15em;
         text-transform: uppercase;
         margin-bottom: 1rem;
         font-weight: 500;
+        text-shadow: 0 0 10px var(--glow-secondary);
     }
 
     /* 按钮容器 */
@@ -87,10 +128,10 @@ st.markdown("""
         margin: 0 auto;
     }
 
-    /* 按钮样式 - 小清新渐变圆角 + 动画 */
+    /* 按钮样式 - 暗色主题 + 发光效果 */
     .stButton>button {
         width: 100%;
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        background: linear-gradient(135deg, var(--accent-start) 0%, var(--accent-end) 100%);
         color: #ffffff;
         border: none;
         padding: 1.25rem 2rem;
@@ -99,9 +140,10 @@ st.markdown("""
         letter-spacing: 0.02em;
         border-radius: 12px;
         transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-        box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+        box-shadow: 0 4px 15px var(--glow-primary), 0 0 20px rgba(102, 126, 234, 0.2);
         position: relative;
         overflow: hidden;
+        transform: translateZ(0);
     }
 
     .stButton>button::before {
@@ -111,7 +153,7 @@ st.markdown("""
         left: -100%;
         width: 100%;
         height: 100%;
-        background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+        background: linear-gradient(90deg, transparent, rgba(255,255,255,0.15), transparent);
         transition: left 0.5s;
     }
 
@@ -122,26 +164,28 @@ st.markdown("""
     .stButton>button:hover {
         background: linear-gradient(135deg, #5568d3 0%, #6b3d8f 100%);
         transform: translateY(-2px) scale(1.02);
-        box-shadow: 0 8px 25px rgba(102, 126, 234, 0.4);
+        box-shadow: 0 8px 25px var(--glow-primary), 0 0 30px rgba(102, 126, 234, 0.4);
     }
 
     .stButton>button:active {
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        background: linear-gradient(135deg, var(--accent-start) 0%, var(--accent-end) 100%);
         transform: translateY(0) scale(0.98);
-        box-shadow: 0 2px 10px rgba(102, 126, 234, 0.2);
+        box-shadow: 0 2px 10px var(--glow-primary);
     }
 
-    /* 轮廓按钮 - 小清新 */
+    /* 轮廓按钮 - 暗色主题 */
     .outline-button .stButton>button {
-        background: #ffffff;
-        color: #667eea;
-        border: 2px solid #667eea;
+        background: transparent;
+        color: var(--accent-start);
+        border: 2px solid var(--accent-start);
+        box-shadow: 0 0 10px var(--glow-primary);
     }
 
     .outline-button .stButton>button:hover {
-        background: #f8f9ff;
+        background: rgba(102, 126, 234, 0.1);
         border-color: #5568d3;
         color: #5568d3;
+        box-shadow: 0 0 20px var(--glow-primary);
     }
 
     /* 进度条样式 - 小清新圆角 */
@@ -153,27 +197,30 @@ st.markdown("""
     .progress-bar {
         width: 100%;
         height: 6px;
-        background-color: #e9ecef;
+        background-color: var(--bg-tertiary);
         border-radius: 3px;
+        box-shadow: inset 0 1px 3px var(--shadow-sm);
     }
 
     .progress-fill {
         height: 100%;
-        background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+        background: linear-gradient(90deg, var(--accent-start) 0%, var(--accent-end) 100%);
         border-radius: 3px;
         transition: width 0.3s ease;
+        box-shadow: 0 0 10px var(--glow-primary);
     }
 
-    /* 结果标签样式 - 小清新 + 动画 */
+    /* 结果标签样式 - 暗色主题 + 发光效果 */
     .result-label {
         font-size: clamp(2.5rem, 8vw, 4rem);
         font-weight: 500;
-        color: #2c3e50;
+        color: var(--text-primary);
         text-align: center;
         margin-bottom: 2rem;
         letter-spacing: 0.02em;
         line-height: 1.2;
         animation: bounceIn 0.6s ease-out;
+        text-shadow: 0 0 30px var(--glow-primary), 0 0 60px var(--glow-secondary);
     }
 
     /* 结果标签动画 */
@@ -194,10 +241,10 @@ st.markdown("""
         }
     }
 
-    /* 评价文字样式 - 小清新 + 渐入动画 */
+    /* 评价文字样式 - 暗色主题 + 渐入动画 */
     .evaluation-text {
         font-size: 1rem;
-        color: #495057;
+        color: var(--text-secondary);
         text-align: center;
         line-height: 1.8;
         margin-bottom: 2rem;
@@ -205,6 +252,7 @@ st.markdown("""
         letter-spacing: 0.01em;
         animation: fadeInUp 0.5s ease-out;
         animation-fill-mode: both;
+        text-shadow: 0 0 10px var(--glow-secondary);
     }
 
     /* 评价文字动画 - 延迟 */
@@ -242,16 +290,17 @@ st.markdown("""
         }
     }
 
-    /* 占比文字样式 - 小清新标签 + 脉冲动画 */
+    /* 占比文字样式 - 暗色主题 + 脉冲动画 */
     .percentage-text {
         font-size: 0.875rem;
-        color: #adb5bd;
+        color: var(--text-tertiary);
         text-align: center;
         letter-spacing: 0.05em;
         text-transform: uppercase;
         margin-bottom: 3rem;
         font-weight: 500;
         animation: pulse 2s ease-in-out infinite;
+        text-shadow: 0 0 10px var(--glow-secondary);
     }
 
     @keyframes pulse {
@@ -263,13 +312,14 @@ st.markdown("""
         }
     }
 
-    /* 底部提示 - 小清新 */
+    /* 底部提示 - 暗色主题 */
     .footer-text {
         font-size: 0.75rem;
-        color: #ced4da;
+        color: var(--text-tertiary);
         text-align: center;
         letter-spacing: 0.03em;
         margin-top: 4rem;
+        text-shadow: 0 0 5px var(--glow-secondary);
     }
 
     /* 选项按钮容器 */
@@ -282,22 +332,24 @@ st.markdown("""
         margin: 0 auto;
     }
 
-    /* 题目文字 - 小清新 */
+    /* 题目文字 - 暗色主题 */
     .question-text {
         font-size: clamp(1.25rem, 4vw, 1.75rem);
         font-weight: 400;
-        color: #343a40;
+        color: var(--text-primary);
         text-align: center;
         margin-bottom: 3rem;
         line-height: 1.6;
         letter-spacing: 0.01em;
+        text-shadow: 0 0 15px var(--glow-secondary);
     }
 
-    /* 分割线 - 小清新 */
+    /* 分割线 - 暗色主题 */
     .divider {
         height: 1px;
-        background: linear-gradient(90deg, transparent 0%, #dee2e6 50%, transparent 100%);
+        background: linear-gradient(90deg, var(--divider-gradient-start) 0%, var(--divider-gradient-mid) 50%, var(--divider-gradient-end) 100%);
         margin: 3rem 0;
+        box-shadow: 0 0 10px var(--glow-secondary);
     }
 
     /* 图片容器 */
@@ -305,6 +357,12 @@ st.markdown("""
         display: flex;
         justify-content: center;
         margin-bottom: 2rem;
+    }
+
+    /* 标签图标样式 */
+    .test-icon {
+        font-size: 2rem;
+        margin-right: 0.75rem;
     }
 
     /* 标签图标样式 */
@@ -402,14 +460,14 @@ st.markdown("""
         }
     }
 
-    /* 沉浸式测试页面样式 */
+    /* 沉浸式测试页面样式 - 暗色主题 */
     .immersive-test {
         position: fixed;
         top: 0;
         left: 0;
         right: 0;
         bottom: 0;
-        background: linear-gradient(135deg, #fdfbf7 0%, #f8f9fa 100%);
+        background: linear-gradient(135deg, var(--bg-primary) 0%, var(--bg-secondary) 100%);
         z-index: 1000;
         overflow-y: auto;
     }
@@ -507,9 +565,9 @@ st.markdown("""
         }
     }
 
-    /* 其他测试按钮样式 */
+    /* 其他测试按钮样式 - 暗色主题 */
     .other-test-btn {
-        background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+        background: linear-gradient(135deg, var(--accent-secondary) 0%, var(--accent-secondary-end) 100%);
         color: white;
         border: none;
         padding: 1rem 2rem;
@@ -519,43 +577,45 @@ st.markdown("""
         cursor: pointer;
         width: 100%;
         max-width: 500px;
-        box-shadow: 0 4px 15px rgba(240, 87, 108, 0.3);
+        box-shadow: 0 4px 15px var(--glow-accent), 0 0 20px rgba(240, 147, 251, 0.2);
         transition: all 0.3s ease;
         margin-bottom: 1rem;
+        transform: translateZ(0);
     }
 
     .other-test-btn:hover {
         transform: translateY(-2px);
-        box-shadow: 0 6px 20px rgba(240, 87, 108, 0.4);
+        box-shadow: 0 6px 20px var(--glow-accent), 0 0 30px rgba(240, 147, 251, 0.4);
     }
 
     .other-test-btn:active {
         transform: translateY(0);
-        box-shadow: 0 2px 10px rgba(240, 87, 108, 0.3);
+        box-shadow: 0 2px 10px var(--glow-accent);
     }
 
     /* 其他测试按钮特殊样式 */
     [data-testid*="other_test_"] > button {
-        background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%) !important;
+        background: linear-gradient(135deg, var(--accent-secondary) 0%, var(--accent-secondary-end) 100%) !important;
         color: white !important;
         border: none !important;
         padding: 1rem 2rem !important;
         font-size: 1rem !important;
         font-weight: 500 !important;
         border-radius: 12px !important;
-        box-shadow: 0 4px 15px rgba(240, 87, 108, 0.3) !important;
+        box-shadow: 0 4px 15px var(--glow-accent), 0 0 20px rgba(240, 147, 251, 0.2) !important;
         transition: all 0.3s ease !important;
         margin-bottom: 1rem !important;
+        transform: translateZ(0) !important;
     }
 
     [data-testid*="other_test_"] > button:hover {
         transform: translateY(-2px) !important;
-        box-shadow: 0 6px 20px rgba(240, 87, 108, 0.4) !important;
+        box-shadow: 0 6px 20px var(--glow-accent), 0 0 30px rgba(240, 147, 251, 0.4) !important;
     }
 
     [data-testid*="other_test_"] > button:active {
         transform: translateY(0) !important;
-        box-shadow: 0 2px 10px rgba(240, 87, 108, 0.3) !important;
+        box-shadow: 0 2px 10px var(--glow-accent) !important;
     }
 </style>
 
